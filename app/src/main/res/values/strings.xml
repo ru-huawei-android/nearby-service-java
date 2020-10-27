@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Nearby Kit Demo</string>
+    <string name="owner">HUAWEI Developer</string>
+    <string name="copyright_info">Copyright 2020. Huawei Technologies Co., Ltd</string>
+    <string name="message_engine_example_header">Message Engine Example</string>
+    <string name="huawei_logo_content_description">Huawei Logo</string>
+    <string name="confirm">OK</string>
+    <string name="warn">Warn</string>
+    <string name="searching_dialog_header">Searching…</string>
+    <string name="subscribe_item_text">Discover Messages</string>
+    <string name="publish_message_item_text">Publish Message</string>
+    <string name="publish_new_message_dialog_title">Publish New Message</string>
+    <string name="message_title_placeholder">Message Title</string>
+    <string name="message_content_placeholder">Message Content</string>
+    <string name="dialog_ok">Ok</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="unpublish_last_message_checkbox_text">Unpublish Last Message</string>
+    <string name="start_broadcasting_item_text_start">Start Broadcasting</string>
+    <string name="start_broadcasting_item_text_stop">Stop Broadcasting</string>
+    <string name="start_discovery_item_text">Start Discovery</string>
+    <string name="disconnect_item_text">Disconnect</string>
+    <string name="send_file_item_text">Send File</string>
+    <string name="search_dialog_title">Searching...</string>
+    <string name="nearby_connection_example">Nearby Connection Example</string>
+    <string name="transferring">Transferring...</string>
+    <string name="transfer_progress_text">%d of %d bytes received</string>
+    <string name="transfer_details_text">Transferred %d of %d bytes</string>
+</resources>
