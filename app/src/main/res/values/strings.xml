@@ -25,4 +25,8 @@
     <string name="transferring">Transferring...</string>
     <string name="transfer_progress_text">%d of %d bytes received</string>
     <string name="transfer_details_text">Transferred %d of %d bytes</string>
+    <string name="start_send_bytes_item_text">Start Sending Bytes</string>
+    <string name="stop_send_bytes_item_text">Stop Sending Bytes</string>
+    <string name="move_the_seekbar_knob_to_send_its_position">Move the SeekBar knob to send its position</string>
+    <string name="downloading_file">Downloading file...</string>
 </resources>

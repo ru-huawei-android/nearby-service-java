@@ -11,19 +11,19 @@
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
+        android:layout_marginTop="32dp"
+        android:contentDescription="@string/huawei_logo_content_description"
         android:src="@mipmap/ic_launcher_foreground"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/huawei_logo_content_description" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/headerTextView"
+        style="@style/TextAppearance.AppCompat.Headline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        style="@style/TextAppearance.AppCompat.Headline"
+        android:layout_marginTop="16dp"
         android:text="@string/nearby_connection_example"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -33,9 +33,10 @@
         android:id="@+id/start_broadcast_item"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:gravity="center|center_vertical"
         android:minHeight="?android:attr/listPreferredItemHeightSmall"
+        android:onClick="onClick"
         android:paddingStart="?android:attr/listPreferredItemPaddingStart"
         android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
         android:text="@string/start_broadcasting_item_text_start"
@@ -43,8 +44,7 @@
         android:textAppearance="?android:attr/textAppearanceListItemSmall"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/headerTextView"
-        android:onClick="startBroadcastingItemClick"/>
+        app:layout_constraintTop_toBottomOf="@+id/headerTextView" />
 
     <View
         android:id="@+id/divider1"
@@ -72,7 +72,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider1"
-        android:onClick="startScanItemClick"/>
+        android:onClick="onClick"/>
 
     <View
         android:id="@+id/divider2"
@@ -101,7 +101,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider2"
-        android:onClick="disconnectItemClick"/>
+        android:onClick="onClick"/>
 
     <View
         android:id="@+id/divider3"
@@ -131,7 +131,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider3"
-        android:onClick="sendFileItemClick"/>
+        android:onClick="onClick"/>
 
     <View
         android:id="@+id/divider4"
@@ -145,6 +145,65 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/send_file_item" />
+
+    <TextView
+        android:id="@+id/send_bytes_item"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center|center_vertical"
+        android:minHeight="?android:attr/listPreferredItemHeightSmall"
+        android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+        android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
+        android:text="@string/start_send_bytes_item_text"
+        android:textAlignment="center"
+        android:visibility="gone"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider4"
+        android:onClick="onClick"/>
+
+    <View
+        android:id="@+id/divider5"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginEnd="1dp"
+        android:visibility="gone"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/send_bytes_item" />
+
+
+    <LinearLayout
+        android:id="@+id/bytes_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/status"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/bytes_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/move_the_seekbar_knob_to_send_its_position"
+            android:textAlignment="center"
+            android:textSize="12sp" />
+
+        <androidx.appcompat.widget.AppCompatSeekBar
+            android:id="@+id/bytes_seek_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8sp"
+            android:indeterminate="false"
+            android:max="255"
+            android:progress="128"
+            android:progressTint="#FFFFFF" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/download_container"
@@ -160,7 +219,7 @@
             android:id="@+id/download_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Downloading file..."
+            android:text="@string/downloading_file"
             android:textAlignment="center"
             android:textSize="12sp" />
 

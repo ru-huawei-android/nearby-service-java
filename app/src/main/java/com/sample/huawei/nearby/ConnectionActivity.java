@@ -9,17 +9,15 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.huawei.hmf.tasks.OnFailureListener;
 import com.huawei.hmf.tasks.OnSuccessListener;
-import com.huawei.hmf.tasks.Task;
-import com.huawei.hms.common.ApiException;
 import com.huawei.hms.nearby.Nearby;
 import com.huawei.hms.nearby.StatusCode;
 import com.huawei.hms.nearby.discovery.BroadcastOption;
@@ -43,7 +41,7 @@ import java.util.Map;
 import static com.sample.huawei.nearby.SearchDialogFragment.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class ConnectionActivity extends AppCompatActivity {
+public class ConnectionActivity extends AppCompatActivity implements View.OnClickListener {
 
     private final Policy policy = Policy.POLICY_STAR;
     private final String SERVICE_ID = "com.sample.huawei.nearby";
@@ -59,6 +57,7 @@ public class ConnectionActivity extends AppCompatActivity {
 
     private TextView broadCastingItemTextView;
     private TextView status;
+    private TextView sendingBytesTextView;
     private AlertDialog confirmConnectionDialog;
 
     private LinearLayout transferInfoContainer;
@@ -68,7 +67,11 @@ public class ConnectionActivity extends AppCompatActivity {
     private long transferFileSize;
     private String transferFileName;
     private Data transferFilePayload;
-    private Boolean isSendingFile;
+    private Boolean isSendingFile = false;
+
+    private LinearLayout bytesInfoContainer;
+    private SeekBar bytesSeekBar;
+    private Boolean isSendingBytes = false;
 
     private AlertDialog waitingForConnectionDialog;
 
@@ -79,6 +82,7 @@ public class ConnectionActivity extends AppCompatActivity {
 
         status = findViewById(R.id.status);
         broadCastingItemTextView = findViewById(R.id.start_broadcast_item);
+        sendingBytesTextView = findViewById(R.id.send_bytes_item);
         searchDialogFragment = new SearchDialogFragment<>(itemHandler, onCloseListener, onSelectListener);
         searchDialogFragment.setDialogTitle(getString(R.string.search_dialog_title));
 
@@ -94,6 +98,9 @@ public class ConnectionActivity extends AppCompatActivity {
         transferBlockDetails = findViewById(R.id.download_details);
         transferProgressBar = findViewById(R.id.transfer_progress);
 
+        bytesInfoContainer = findViewById(R.id.bytes_container);
+        bytesSeekBar = findViewById(R.id.bytes_seek_bar);
+        bytesSeekBar.setOnSeekBarChangeListener(seekBarChangeListener);
     }
 
     @Override
@@ -127,20 +134,14 @@ public class ConnectionActivity extends AppCompatActivity {
 
                     Nearby.getTransferEngine(getApplicationContext())
                             .sendData(remoteEndpoint, fileInfoData).addOnSuccessListener(
-                                    aVoid -> {
-                                        Nearby.getTransferEngine(getApplicationContext())
-                                                .sendData(remoteEndpoint, fileData)
-                                                .addOnFailureListener((ex -> {
-                                                    Toast.makeText(this, "sendData onFailure: " + ex.getMessage(), Toast.LENGTH_LONG).show();
-                                                }))
-                                                .addOnCompleteListener(this, (endpointName) -> {
-                                                    //Toast.makeText(this, "sendData onComplete - endpoint: " + endpointName, Toast.LENGTH_LONG).show();
-                                                })
-                                                .addOnSuccessListener(this, endpointName -> {
-                                                    //Toast.makeText(this, "sendData onSuccess - endpoint: " + endpointName, Toast.LENGTH_LONG).show();
-                                                });
-                                        showTransferInfo();
-                                    }
+                            aVoid -> {
+                                Nearby.getTransferEngine(getApplicationContext())
+                                        .sendData(remoteEndpoint, fileData)
+                                        .addOnFailureListener((ex -> {
+                                            Toast.makeText(this, "sendData onFailure: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+                                        }));
+                                showTransferInfo();
+                            }
                     );
 
                 } catch (FileNotFoundException e) {
@@ -150,16 +151,33 @@ public class ConnectionActivity extends AppCompatActivity {
         }
     }
 
+    private final SeekBar.OnSeekBarChangeListener seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (isConnected && fromUser && isSendingBytes) {
+                Data bytesData = Data.fromBytes(new byte[] {(byte)progress});
+                Nearby.getTransferEngine(getApplicationContext()).sendData(remoteEndpoint, bytesData);
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+        }
+    };
 
     private final ItemHandler itemHandler = new ItemHandler() {
         @Override
         public String getItemTitle(Object item) {
-            return ((ScanEndpointInfo)item).getName();
+            return ((ScanEndpointInfo) item).getName();
         }
 
         @Override
         public String getItemStringContent(Object item) {
-            ScanEndpointInfo info = (ScanEndpointInfo)item;
+            ScanEndpointInfo info = (ScanEndpointInfo) item;
             return info.getServiceId() + "//" + info.getName();
         }
     };
@@ -175,7 +193,7 @@ public class ConnectionActivity extends AppCompatActivity {
     private final OnSelectListener onSelectListener = new OnSelectListener() {
         @Override
         public void OnItemSelected(Object item) {
-            Map.Entry<String, ScanEndpointInfo> mapEntry = (Map.Entry<String, ScanEndpointInfo>)item;
+            Map.Entry<String, ScanEndpointInfo> mapEntry = (Map.Entry<String, ScanEndpointInfo>) item;
             ScanEndpointInfo info = mapEntry.getValue();
             if (info != null) {
                 doStartConnection(mapEntry.getKey(), info.getName());
@@ -196,18 +214,6 @@ public class ConnectionActivity extends AppCompatActivity {
     };
 
 
-    public void startBroadcastingItemClick(View view) {
-        if (!isBroadcasting) {
-            startAdvertising();
-        } else {
-            stopAdvertising();
-        }
-    }
-
-    public void startScanItemClick(View view) {
-        startDiscovery();
-    }
-
     private final ConnectCallback connectionCallback = new ConnectCallback() {
 
         @Override
@@ -219,9 +225,9 @@ public class ConnectionActivity extends AppCompatActivity {
                     .setMessage("Please confirm the match code is: " + connectInfo.getAuthCode())
                     .setPositiveButton(
                             "Accept",
-                            (dialog,  which) ->
+                            (dialog, which) ->
                             {
-                               Nearby.getDiscoveryEngine(ConnectionActivity.this).acceptConnect(endpointId, new ReceiveDataListener());
+                                Nearby.getDiscoveryEngine(ConnectionActivity.this).acceptConnect(endpointId, new ReceiveDataListener());
                             })
 
                     .setNegativeButton(
@@ -260,13 +266,48 @@ public class ConnectionActivity extends AppCompatActivity {
         }
     };
 
-    public void disconnectItemClick(View view) {
-        Nearby.getDiscoveryEngine(this).disconnectAll();
-        setConnectedStatus(false, null);
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.start_broadcast_item:
+                toggleBroadcasting();
+                break;
+            case R.id.start_scan_item:
+                startDiscovery();
+                break;
+            case R.id.disconnect_item:
+                disconnectAll();
+                break;
+            case R.id.send_file_item:
+                openFileDialog();
+                break;
+            case R.id.send_bytes_item:
+                toggleSendingBytes();
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + v.getId());
+        }
     }
 
-    public void sendFileItemClick(View view) {
-        openFileDialog();
+    private void toggleBroadcasting() {
+        if (!isBroadcasting) {
+            startAdvertising();
+        } else {
+            stopAdvertising();
+        }
+    }
+
+    private void toggleSendingBytes() {
+        if (isSendingBytes) {
+            stopSendingBytes();
+        } else {
+            startSendingBytes();
+        }
+    }
+
+    private void disconnectAll() {
+        Nearby.getDiscoveryEngine(this).disconnectAll();
+        setConnectedStatus(false, null);
     }
 
     class ReceiveDataListener extends DataCallback {
@@ -274,13 +315,28 @@ public class ConnectionActivity extends AppCompatActivity {
         public void onReceived(String endpointId, Data data) {
             /* BYTES data is sent as a single block, so we can get complete data. */
             if (data.getType() == Data.Type.BYTES) {
-                String str = new String(data.asBytes(), UTF_8);
-                if (str.endsWith(FILEDATA_SUFFIX)) {
-                    String[] chunks = str.split(":");
-                    if (chunks.length == 3) {
-                        transferFileName = chunks[0];
-                        transferFileSize = Long.parseLong(chunks[1]);
-                        showTransferInfo();
+
+                byte[] receivedBytes = data.asBytes();
+
+                if (receivedBytes.length == 1) {
+                    if (receivedBytes[0] == -1) {
+                        stopSendingBytes();
+                        return;
+                    }
+                    if (!isSendingBytes) {
+                        startSendingBytes();
+                    }
+
+                    updateBytesInfo(receivedBytes[0]);
+                } else {
+                    String str = new String(data.asBytes(), UTF_8);
+                    if (str.endsWith(FILEDATA_SUFFIX)) {
+                        String[] chunks = str.split(":");
+                        if (chunks.length == 3) {
+                            transferFileName = chunks[0];
+                            transferFileSize = Long.parseLong(chunks[1]);
+                            showTransferInfo();
+                        }
                     }
                 }
             }
@@ -309,9 +365,8 @@ public class ConnectionActivity extends AppCompatActivity {
                         }
                     }
                 } else { /* cancelled or failed */
-                    // Inform user
+                    Toast.makeText(ConnectionActivity.this, ("Transfer interrupted"), Toast.LENGTH_LONG).show();
                 }
-                // Dismiss transfer progress view
                 hideTransferInfo();
                 isSendingFile = false;
             }
@@ -319,22 +374,22 @@ public class ConnectionActivity extends AppCompatActivity {
     }
 
     private final ScanEndpointCallback scanEndpointCallback = new ScanEndpointCallback() {
-                @Override
-                public void onFound(String endpointId, ScanEndpointInfo discoveryEndpointInfo) {
-                    Toast.makeText(ConnectionActivity.this, "Found: " + discoveryEndpointInfo.getName(), Toast.LENGTH_LONG).show();
-                    searchDialogFragment.addItem(endpointId, discoveryEndpointInfo);
-                }
+        @Override
+        public void onFound(String endpointId, ScanEndpointInfo discoveryEndpointInfo) {
+            Toast.makeText(ConnectionActivity.this, "Found: " + discoveryEndpointInfo.getName(), Toast.LENGTH_LONG).show();
+            searchDialogFragment.addItem(endpointId, discoveryEndpointInfo);
+        }
 
-                @Override
-                public void onLost(String endpointId) {
-                    searchDialogFragment.removeItem(endpointId);
-                    Toast.makeText(ConnectionActivity.this, "onLost", Toast.LENGTH_LONG).show();
-                }
-            };
+        @Override
+        public void onLost(String endpointId) {
+            searchDialogFragment.removeItem(endpointId);
+            Toast.makeText(ConnectionActivity.this, "onLost", Toast.LENGTH_LONG).show();
+        }
+    };
 
     private void startAdvertising() {
         stopDiscovery();
-        BroadcastOption broadcastOption = new BroadcastOption.Builder().setPolicy (policy).build();
+        BroadcastOption broadcastOption = new BroadcastOption.Builder().setPolicy(policy).build();
         Nearby.getDiscoveryEngine(ConnectionActivity.this)
                 .startBroadcasting(endpointName, SERVICE_ID, connectionCallback, broadcastOption)
                 .addOnSuccessListener(aVoid -> {
@@ -390,7 +445,7 @@ public class ConnectionActivity extends AppCompatActivity {
                 });
     }
 
-    private void setStatus (String status) {
+    private void setStatus(String status) {
         this.status.setText(String.format("Status: %s", !status.isEmpty() ? status : "Idle"));
     }
 
@@ -403,6 +458,8 @@ public class ConnectionActivity extends AppCompatActivity {
         findViewById(R.id.divider3).setVisibility(visibility);
         findViewById(R.id.send_file_item).setVisibility(visibility);
         findViewById(R.id.divider4).setVisibility(visibility);
+        findViewById(R.id.send_bytes_item).setVisibility(visibility);
+        findViewById(R.id.divider5).setVisibility(visibility);
 
         if (isConnected) {
             setStatus(String.format("Connected to: %s", remoteEndpoint));
@@ -429,7 +486,7 @@ public class ConnectionActivity extends AppCompatActivity {
 
     private void updateTransferInfo(long current) {
         int percent = transferFileSize != 0
-                ? (int)(((float)current / (float)transferFileSize) * 100)
+                ? (int) (((float) current / (float) transferFileSize) * 100)
                 : 0;
         transferProgressBar.setProgress(percent);
         transferBlockDetails.setText(String.format(getString(R.string.transfer_details_text), current, transferFileSize));
@@ -437,6 +494,29 @@ public class ConnectionActivity extends AppCompatActivity {
 
     private void hideTransferInfo() {
         transferInfoContainer.setVisibility(View.GONE);
+    }
+
+    private void startSendingBytes() {
+        sendingBytesTextView.setText(R.string.stop_send_bytes_item_text);
+        isSendingBytes = true;
+        bytesInfoContainer.setVisibility(View.VISIBLE);
+        bytesSeekBar.setMax(128);
+        bytesSeekBar.setProgress(64);
+    }
+
+    private void stopSendingBytes() {
+        if (isSendingBytes) sendByteTransferEnd();
+        sendingBytesTextView.setText(R.string.start_send_bytes_item_text);
+        isSendingBytes = false;
+        bytesInfoContainer.setVisibility(View.GONE);
+    }
+
+    private void updateBytesInfo(int progress) {
+        bytesSeekBar.setProgress(progress);
+    }
+
+    private void sendByteTransferEnd() {
+        Nearby.getTransferEngine(getApplicationContext()).sendData(remoteEndpoint, Data.fromBytes(new byte[] {-1}));
     }
 
     private void openFileDialog() {
