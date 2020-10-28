@@ -70,6 +70,8 @@ public class ConnectionActivity extends AppCompatActivity {
     private Data transferFilePayload;
     private Boolean isSendingFile;
 
+    private AlertDialog waitingForConnectionDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,6 +93,7 @@ public class ConnectionActivity extends AppCompatActivity {
         transferBlockTitle = findViewById(R.id.download_title);
         transferBlockDetails = findViewById(R.id.download_details);
         transferProgressBar = findViewById(R.id.transfer_progress);
+
     }
 
     @Override
@@ -176,6 +179,18 @@ public class ConnectionActivity extends AppCompatActivity {
             ScanEndpointInfo info = mapEntry.getValue();
             if (info != null) {
                 doStartConnection(mapEntry.getKey(), info.getName());
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(ConnectionActivity.this);
+                builder
+                        .setTitle("Waiting for connection")
+                        .setNegativeButton(
+                                "Cancel",
+                                (dialog, which) -> {
+                                    Nearby.getDiscoveryEngine(ConnectionActivity.this).disconnect(mapEntry.getKey());
+                                    dialog.dismiss();
+                                });
+                waitingForConnectionDialog = builder.create();
+                waitingForConnectionDialog.show();
             }
         }
     };
@@ -197,6 +212,7 @@ public class ConnectionActivity extends AppCompatActivity {
 
         @Override
         public void onEstablish(String endpointId, ConnectInfo connectInfo) {
+            if (waitingForConnectionDialog != null) waitingForConnectionDialog.dismiss();
             AlertDialog.Builder builder = new AlertDialog.Builder(ConnectionActivity.this);
             builder
                     .setTitle(connectInfo.getEndpointName() + " request connection")
@@ -238,6 +254,7 @@ public class ConnectionActivity extends AppCompatActivity {
 
         @Override
         public void onDisconnected(String s) {
+            if (waitingForConnectionDialog != null) waitingForConnectionDialog.dismiss();
             setConnectedStatus(false, null);
             Toast.makeText(ConnectionActivity.this, "Disconnected", Toast.LENGTH_LONG).show();
         }
