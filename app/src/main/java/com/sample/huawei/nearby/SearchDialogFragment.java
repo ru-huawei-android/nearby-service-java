@@ -47,7 +47,7 @@ public class SearchDialogFragment<T> extends DialogFragment implements MessageRe
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
                 .setView(view)
                 .setCancelable(false)
-                .setNegativeButton("Cancel", (dialog, which) -> {
+                .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
                     if (onCloseListener != null) {
                         onCloseListener.onClose();
                     }

@@ -40,7 +40,7 @@ public class NewMessageDialogFragment extends DialogFragment {
                 .setPositiveButton(R.string.dialog_ok, (dialog, which) -> {
                     String title = messageTitle.getText().toString();
                     if (title.length() == 0) {
-                        Toast.makeText(getActivity(), "Message title cannot be empty", Toast.LENGTH_SHORT)
+                        Toast.makeText(getActivity(), R.string.empty_title_error_message, Toast.LENGTH_SHORT)
                                 .show();
                         return;
                     }

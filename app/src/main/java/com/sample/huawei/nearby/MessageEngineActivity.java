@@ -139,7 +139,7 @@ public class MessageEngineActivity extends AppCompatActivity {
         PutOption option = new PutOption.Builder().setPolicy(policy).build();
         Nearby.getMessageEngine(this).put(publishedMessage, option).addOnCompleteListener(result -> {
             if (result.isSuccessful()) {
-                Toast.makeText(this, "Message published successfully.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.message_published_successfully, Toast.LENGTH_LONG).show();
                 return;
             }
             String str = "Failed to publish message, exception: " + result.getException().getMessage();

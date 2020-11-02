@@ -49,8 +49,8 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
     private static final int REQUEST_PICKFILE = 1001;
     private static final String FILEDATA_SUFFIX = ":FILEDATA";
 
-    private Boolean isBroadcasting = false;
-    private Boolean isConnected = false;
+    private boolean isBroadcasting;
+    private boolean isConnected;
     private String endpointName;
     private String remoteEndpoint;
     private SearchDialogFragment<ScanEndpointInfo> searchDialogFragment;
@@ -67,11 +67,11 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
     private long transferFileSize;
     private String transferFileName;
     private Data transferFilePayload;
-    private Boolean isSendingFile = false;
+    private boolean isSendingFile;
 
     private LinearLayout bytesInfoContainer;
     private SeekBar bytesSeekBar;
-    private Boolean isSendingBytes = false;
+    private boolean isSendingBytes;
 
     private AlertDialog waitingForConnectionDialog;
 
@@ -200,7 +200,7 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(ConnectionActivity.this);
                 builder
-                        .setTitle("Waiting for connection")
+                        .setTitle(R.string.waiting_for_connection)
                         .setNegativeButton(
                                 "Cancel",
                                 (dialog, which) -> {
@@ -221,17 +221,17 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
             if (waitingForConnectionDialog != null) waitingForConnectionDialog.dismiss();
             AlertDialog.Builder builder = new AlertDialog.Builder(ConnectionActivity.this);
             builder
-                    .setTitle(connectInfo.getEndpointName() + " request connection")
-                    .setMessage("Please confirm the match code is: " + connectInfo.getAuthCode())
+                    .setTitle(connectInfo.getEndpointName() + getString(R.string.someone_requested_connection))
+                    .setMessage(getString(R.string.confirm_pin_code) + connectInfo.getAuthCode())
                     .setPositiveButton(
-                            "Accept",
+                            R.string.connection_accept,
                             (dialog, which) ->
                             {
                                 Nearby.getDiscoveryEngine(ConnectionActivity.this).acceptConnect(endpointId, new ReceiveDataListener());
                             })
 
                     .setNegativeButton(
-                            "Reject",
+                            R.string.connection_reject,
                             (dialog, which) -> {
                                 Nearby.getDiscoveryEngine(ConnectionActivity.this).rejectConnect(endpointId);
                                 dialog.dismiss();
@@ -359,13 +359,13 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
                         File targetFileName = new File(Environment.getExternalStorageDirectory(), transferFileName);
                         boolean result = payloadFile.renameTo(targetFileName);
                         if (result) {
-                            Toast.makeText(ConnectionActivity.this, ("File transfer complete, check external storage"), Toast.LENGTH_LONG).show();
+                            Toast.makeText(ConnectionActivity.this, (getString(R.string.transfer_complete)), Toast.LENGTH_LONG).show();
                         } else {
-                            Toast.makeText(ConnectionActivity.this, ("Move file failed"), Toast.LENGTH_LONG).show();
+                            Toast.makeText(ConnectionActivity.this, (getString(R.string.transfer_failed)), Toast.LENGTH_LONG).show();
                         }
                     }
                 } else { /* cancelled or failed */
-                    Toast.makeText(ConnectionActivity.this, ("Transfer interrupted"), Toast.LENGTH_LONG).show();
+                    Toast.makeText(ConnectionActivity.this, (getString(R.string.transfer_interrupted)), Toast.LENGTH_LONG).show();
                 }
                 hideTransferInfo();
                 isSendingFile = false;
@@ -376,14 +376,14 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
     private final ScanEndpointCallback scanEndpointCallback = new ScanEndpointCallback() {
         @Override
         public void onFound(String endpointId, ScanEndpointInfo discoveryEndpointInfo) {
-            Toast.makeText(ConnectionActivity.this, "Found: " + discoveryEndpointInfo.getName(), Toast.LENGTH_LONG).show();
+            //Toast.makeText(ConnectionActivity.this, "Found: " + discoveryEndpointInfo.getName(), Toast.LENGTH_LONG).show();
             searchDialogFragment.addItem(endpointId, discoveryEndpointInfo);
         }
 
         @Override
         public void onLost(String endpointId) {
+            //Toast.makeText(ConnectionActivity.this, "onLost", Toast.LENGTH_LONG).show();
             searchDialogFragment.removeItem(endpointId);
-            Toast.makeText(ConnectionActivity.this, "onLost", Toast.LENGTH_LONG).show();
         }
     };
 
@@ -393,12 +393,12 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
         Nearby.getDiscoveryEngine(ConnectionActivity.this)
                 .startBroadcasting(endpointName, SERVICE_ID, connectionCallback, broadcastOption)
                 .addOnSuccessListener(aVoid -> {
-                    setStatus("Advertising");
+                    setStatus(getString(R.string.status_advertising));
                     isBroadcasting = true;
                     broadCastingItemTextView.setText(getString(R.string.start_broadcasting_item_text_stop));
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(ConnectionActivity.this, "Advertising Failure", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ConnectionActivity.this, R.string.advertising_failure, Toast.LENGTH_LONG).show();
                 });
     }
 
@@ -411,7 +411,7 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
         Nearby.getDiscoveryEngine(ConnectionActivity.this)
                 .startScan(SERVICE_ID, scanEndpointCallback, scanOption)
                 .addOnSuccessListener(aVoid -> {
-                    setStatus("Discovering");
+                    setStatus(getString(R.string.status_discovering));
                 })
                 .addOnFailureListener(e -> Toast.makeText(ConnectionActivity.this, "Start Scan Failure", Toast.LENGTH_SHORT).show());
     }
@@ -434,7 +434,7 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        setStatus(String.format("Connecting to: %s(%s)", endpointId, remoteEndpointName));
+                        setStatus(String.format(getString(R.string.status_connecting_to), endpointId, remoteEndpointName));
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -446,10 +446,10 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
     }
 
     private void setStatus(String status) {
-        this.status.setText(String.format("Status: %s", !status.isEmpty() ? status : "Idle"));
+        this.status.setText(String.format(getString(R.string.status_general), !status.isEmpty() ? status : getString(R.string.status_idle)));
     }
 
-    private void setConnectedStatus(Boolean isConnected, String remoteEndpoint) {
+    private void setConnectedStatus(boolean isConnected, String remoteEndpoint) {
         this.isConnected = isConnected;
 
         int visibility = isConnected ? View.VISIBLE : View.GONE;
@@ -462,7 +462,7 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
         findViewById(R.id.divider5).setVisibility(visibility);
 
         if (isConnected) {
-            setStatus(String.format("Connected to: %s", remoteEndpoint));
+            setStatus(String.format(getString(R.string.status_connected), remoteEndpoint));
             this.remoteEndpoint = remoteEndpoint;
         } else {
             setStatus("");
@@ -478,7 +478,7 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
     }
 
     private void showTransferInfo() {
-        transferBlockTitle.setText(String.format("Transferring %s", transferFileName));
+        transferBlockTitle.setText(String.format(getString(R.string.transferring_bytes_string), transferFileName));
         transferProgressBar.setProgress(0);
         transferProgressBar.setMax(100);
         transferInfoContainer.setVisibility(View.VISIBLE);

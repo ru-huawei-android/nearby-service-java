@@ -3,6 +3,7 @@ package com.sample.huawei.nearby;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 
@@ -21,16 +22,14 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         ArrayList<MainMenuItem> dataSet = new ArrayList<>();
-        dataSet.add(new MainMenuItem("Message Engine", MessageEngineActivity.class));
-        dataSet.add(new MainMenuItem("Nearby Connection", ConnectionActivity.class));
+        dataSet.add(new MainMenuItem(getString(R.string.mesaage_engine_item), MessageEngineActivity.class));
+        dataSet.add(new MainMenuItem(getString(R.string.nearby_connection_item), ConnectionActivity.class));
 
         RecyclerView recyclerView = findViewById(R.id.rv);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -43,17 +42,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkPermission() {
         if (!BluetoothCheckUtil.isBlueEnabled()) {
-            showWarnDialog("Bluetooth is unavailable. Turn on Bluetooth and run this app again.");
+            showWarnDialog(getString(R.string.bt_unavailable_message));
             return;
         }
 
         if (!LocationCheckUtil.isLocationEnabled(this)) {
-            showWarnDialog("Location is unavailable. Turn on Location and run this app again.");
+            showWarnDialog(getString(R.string.location_unavailable_message));
             return;
         }
 
         if (!NetCheckUtil.isNetworkAvailable(this)) {
-            showWarnDialog("No Internet access. Make sure you have Internet access and run this app again.");
+            showWarnDialog(getString(R.string.internet_unavailable_message));
             return;
         }
 
@@ -77,5 +76,6 @@ public class MainActivity extends AppCompatActivity {
         builder.setNegativeButton(R.string.confirm, onClickListener);
         builder.show();
     }
+
 }
 
