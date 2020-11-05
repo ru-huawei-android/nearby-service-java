@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -43,6 +44,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ConnectionActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private final String LOG_TAG = "NearbyExample";
     private final Policy policy = Policy.POLICY_STAR;
     private final String SERVICE_ID = "com.sample.huawei.nearby";
 
@@ -376,13 +378,13 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
     private final ScanEndpointCallback scanEndpointCallback = new ScanEndpointCallback() {
         @Override
         public void onFound(String endpointId, ScanEndpointInfo discoveryEndpointInfo) {
-            //Toast.makeText(ConnectionActivity.this, "Found: " + discoveryEndpointInfo.getName(), Toast.LENGTH_LONG).show();
+            Log.d(LOG_TAG, "Found: " + discoveryEndpointInfo.getName());
             searchDialogFragment.addItem(endpointId, discoveryEndpointInfo);
         }
 
         @Override
         public void onLost(String endpointId) {
-            //Toast.makeText(ConnectionActivity.this, "onLost", Toast.LENGTH_LONG).show();
+            Log.d(LOG_TAG, "onLost: " +endpointId);
             searchDialogFragment.removeItem(endpointId);
         }
     };
@@ -440,7 +442,7 @@ public class ConnectionActivity extends AppCompatActivity implements View.OnClic
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        Toast.makeText(ConnectionActivity.this, "requestConnect onFailure ", Toast.LENGTH_LONG).show();
+                        Toast.makeText(ConnectionActivity.this, R.string.connection_failure, Toast.LENGTH_LONG).show();
                     }
                 });
     }
