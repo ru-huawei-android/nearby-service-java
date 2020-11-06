@@ -10,6 +10,7 @@
 
 # Ссылки
 Документация по HMS Nearby Service
+
 https://developer.huawei.com/consumer/en/doc/development/HMSCore-Guides/introduction-0000001050040566
 
 
